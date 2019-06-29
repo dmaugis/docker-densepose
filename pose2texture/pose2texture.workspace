@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="pose2texture" Database="" Version="10.0.0">
+  <Project Name="pose2texture" Path="pose2texture.project" Active="Yes"/>
+  <Project Name="texture2pose" Path="../texture2pose/texture2pose.project" Active="No"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="pose2texture" ConfigName="Debug"/>
+      <Project Name="texture2pose" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment/>
+      <Project Name="pose2texture" ConfigName="Release"/>
+      <Project Name="texture2pose" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

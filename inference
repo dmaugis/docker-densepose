@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+# Usage: inference RESULTSFOLDER DATASETFOLDER 
+#
+# train cyclegan on given dataset
+#
+# Arguments:
+#   RESULTSFOLDER  folder where checkpoints and results will be stored
+#   DATASETFOLDER  folder where the dataset is located
+#
+
+# Note: docopts.sh must be in PATH
+
+# auto parse the header above, See: docopt_get_help_string
+source docopts.sh --auto "$@"
+
+echo ""
+
+DATASETFOLDER=$(realpath "${ARGS['DATASETFOLDER']}")
+RESULTSFOLDER=$(realpath "${ARGS['RESULTSFOLDER']}")
+
+
+if [ ! -d "${DATASETFOLDER}" ]; then
+  # Control will enter here if ${DATASETFOLDER} doesn't exist.
+  >&2 echo "error: dataset '${DATASETFOLDER}' doesn't exist !"
+  exit -1 
+fi
+echo "dataset: ${DATASETFOLDER}"
+
+if [ ! -d "${RESULTSFOLDER}" ]; then
+  # Control will enter here if ${RESULTSFOLDER} doesn't exist.
+  >&2 echo "error: result folder '${RESULTSFOLDER}' doesn't exist !"
+  exit -1 
+fi
+echo "result: ${RESULTSFOLDER}"
+
+
+#./inference results/czech datasets/czech 0226
+pushd "${DATASETFOLDER}"
+for f in *; do
+    if [[ -d $f ]]; then
+        echo "$f"
+        DATASETNAME="$f"
+        if [ ! -d "${RESULTSFOLDER}/${DATASETNAME}" ]; then
+           # Control will enter here if ${RESULTSFOLDER} doesn't exist.
+           mkdir -p ${RESULTSFOLDER}/${DATASETNAME} 
+        fi
+        nvidia-docker run -it --network host \
+                  -v "${DATASETFOLDER}/${DATASETNAME}":/input \
+                  -v "${RESULTSFOLDER}/${DATASETNAME}":/output \
+                  dmaugis/densepose
+        sudo chmod -R a+rw "${RESULTSFOLDER}/${DATASETNAME}"
+        #pushd "${RESULTSFOLDER}/${DATASETNAME}" && pose2texture . "${DATASETFOLDER}/${DATASETNAME}"/*
+        #popd
+    fi
+done
+popd
+sudo chmod -R a+rw "${RESULTSFOLDER}"
+
+
+
+
+
+
+
+
