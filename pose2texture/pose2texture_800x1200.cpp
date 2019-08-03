@@ -15,90 +15,16 @@ static struct option long_options[] = {
     {"verbose",  		required_argument, 0, 'v'},
     {"help",     		no_argument,       0, 'h'},
     {"vui-folder",  	required_argument, 0, 'i'},
-    {"sum",     		no_argument,       0, 's'},
-    {"max",     		no_argument,       0, 'm'},
-    {"density",     	no_argument,       0, 'd'},
     {0, 0, 0, 0}
 };
-
-
-void shift(Mat textmp,Mat texture){
-int row,col;
-        
-for(int row=0; row<600-1; row++)
-    for(int col=0; col<400; col++) {
-        Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-            if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
-                continue;
-            //texsrc[3]+=(float)1.0;    
-            textmp.at<Vec4f>(row+1,col)+=texsrc;
-        }
-    }
-for(int row=0; row<600; row++)
-    for(int col=0; col<400-1; col++) {
-        Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-            if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
-                                continue;
-            //texsrc[3]+=(float)1.0;    
-            textmp.at<Vec4f>(row,col+1)+=texsrc;
-        }
-    }
-for(int row=0; row<600-1; row++)
-    for(int col=0; col<400-1; col++) {
-        Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
-                                continue;
-            //texsrc[3]+=(float)1.0;    
-            textmp.at<Vec4f>(row+1,col+1)+=texsrc;
-        }
-    }
-    
-for(int row=0+1; row<600; row++)
-    for(int col=0; col<400; col++) {
-        Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
-                                continue;
-            //texsrc[3]+=(float)1.0;    
-            textmp.at<Vec4f>(row-1,col)+=texsrc;
-        }
-    }    
-for(int row=0; row<600; row++)
-    for(int col=0+1; col<400; col++) {
-        Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
-                                continue;
-            //texsrc[3]+=(float)1.0;    
-            textmp.at<Vec4f>(row,col-1)+=texsrc;
-        }
-    }   
- for(int row=0+1; row<600; row++)
-    for(int col=0+1; col<400; col++) {
-        Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
-                                continue;
-            //texsrc[3]+=(float)1.0;    
-            textmp.at<Vec4f>(row-1,col-1)+=texsrc;
-        }
-    }              
-            
-}
 
 int main(int argc, char** argv )
 {
     boost::filesystem::path iuvpath=boost::filesystem::path("./");
-    bool    do_sum=false;
-    bool    do_max=false;
-    bool    do_density=false;
-    
+
     int 	option_index = 0;
     while(1) {
-        int c = getopt_long (argc, argv, "hv:i:sm",long_options, &option_index);
+        int c = getopt_long (argc, argv, "hv:i:",long_options, &option_index);
         if (c == -1)
             break;  // end of options
         switch (c) {
@@ -117,8 +43,8 @@ int main(int argc, char** argv )
     }
     cout << "iuv-folder: " << iuvpath << endl;
     
-    Mat   texsum(Size(400,600),CV_32FC4,Scalar(0,0,0,0));
-    Mat   texmax(Size(400,600),CV_32FC4,Scalar(0,0,0,0));
+    Mat   texsum(Size(800,1200),CV_32FC4,Scalar(0,0,0,0));
+    Mat   texmax(Size(800,1200),CV_32FC4,Scalar(0,0,0,0));
     
     int count=0;
 
@@ -200,14 +126,14 @@ int main(int argc, char** argv )
         cout << "\t-> " << denimpath << endl;
 
         // texture image
-        Mat   texture(Size(400,600),CV_32FC4,Scalar(0,0,0,0));
+        Mat   texture(Size(800,1200),CV_32FC4,Scalar(0,0,0,0));
         
         // create tile headers on the texture parts
         // 4x6=24 tiles, tile size 200*200
         vector<Mat>  tiles;
         for(int row=0; row<4; row++)
             for(int col=0; col<6; col++)
-                tiles.push_back(texture(Rect(100*row,100*col,100,100)));
+                tiles.push_back(texture(Rect(200*row,200*col,200,200)));
 
         // project original photo on tiles (i.e. texture image)
         // and keep count of pixel access on layer 3
@@ -217,17 +143,14 @@ int main(int argc, char** argv )
                 Vec3b        vui=vuisrc.at<Vec3b>(row,col);
 
                 int i= (unsigned)0x1F & vui[0];
-                int u=(255.-float(vui[2]))*199./510.;
-                int v=float(vui[1])*199./510.;
+                int u=(255.-float(vui[2]))*199./255.;
+                int v=float(vui[1])*199./255.;
 
                 if((i>0)&&(i<25))
-                    if((u>=0)&&(u<100))
-                        if((v>=0)&&(v<100)) {
+                    if((u>=0)&&(u<200))
+                        if((v>=0)&&(v<200)) {
                             Vec3b pixsrc=imgsrc.at<Vec3b>(row,col); // original photo pixel
-                            if((pixsrc[0]>190)&&(pixsrc[1]>190)&&(pixsrc[2]>190)) // skip white
-                                continue;
-                                
-                            Vec4f texsrc=tiles[i-1].at<Vec4f>(u,v); // texture position
+                            Vec4f texsrc=tiles[i-1].at<Vec4f>(u,v);
                             texsrc[0]+=(float)pixsrc[0];
                             texsrc[1]+=(float)pixsrc[1];
                             texsrc[2]+=(float)pixsrc[2];
@@ -247,8 +170,7 @@ int main(int argc, char** argv )
         split(texture,v);
         density=v[3];
         GaussianBlur(v[3],texdensity,Size(ksize,ksize),0,0);
-        if(do_density)
-            imwrite(denimpath.c_str(),density);
+        imwrite(denimpath.c_str(),density);
         }
         // max texture = keep the pixel values with maximum access 
 
@@ -259,8 +181,8 @@ int main(int argc, char** argv )
         GaussianBlur(v[3],maxdensity,Size(ksize,ksize),0,0);
         }
         
-        for(int row=0; row<600; row++)
-            for(int col=0; col<400; col++) {
+        for(int row=0; row<1200; row++)
+            for(int col=0; col<800; col++) {
                 Vec4f texsrc=texture.at<Vec4f>(row,col);
                 Vec4f maxsrc=texmax.at<Vec4f>(row,col);
                 float texden=texdensity.at<float>(row,col);
@@ -286,41 +208,25 @@ int main(int argc, char** argv )
         texsum=texsum+texture;
         
         count+=1;
-        
-        Mat   textmp(Size(400,600),CV_32FC4,Scalar(0,0,0,0));  
-        
-        shift(textmp,texture);
-        shift(textmp,textmp.clone());
-        shift(textmp,textmp.clone());
-        textmp+=texture;
-        textmp+=texture;
-        textmp+=texture;
-        textmp+=texture;
-        textmp+=texture;
-        textmp+=texture;
-        textmp+=texture;
-        textmp+=texture;    
-        // the unshifted one
-        for(int row=0; row<600; row++)
-            for(int col=0; col<400; col++) {
-                Vec4f texsrc=textmp.at<Vec4f>(row,col);
-                if(texsrc[3]){
-                    texsrc[0]=float(texsrc[0])/float(texsrc[3]);
-                    texsrc[1]=float(texsrc[1])/float(texsrc[3]);
-                    texsrc[2]=float(texsrc[2])/float(texsrc[3]);
-                    texsrc[3]=(float)255.0;
-                    textmp.at<Vec4f>(row,col)=texsrc;
-                }
+
+        // texsum max
+        for(int row=0; row<1200; row++)
+            for(int col=0; col<800; col++) {
+                Vec4f texsrc=texture.at<Vec4f>(row,col);
+                
+                texsrc[0]=float(texsrc[0])/float(texsrc[3]);
+                texsrc[1]=float(texsrc[1])/float(texsrc[3]);
+                texsrc[2]=float(texsrc[2])/float(texsrc[3]);
+                texsrc[3]=(float)(texsrc[3] ? 255.0:0.0);
+                texture.at<Vec4f>(row,col)=texsrc;
             }
-        
-        texture=textmp;
         imwrite(teximpath.c_str(),texture);
         cout << endl;
     }
 
     
-    for(int row=0; row<600; row++)
-        for(int col=0; col<400; col++) {
+    for(int row=0; row<1200; row++)
+        for(int col=0; col<800; col++) {
             Vec4f texsrc=texsum.at<Vec4f>(row,col);
             texsrc[0]=float(texsrc[0])/float(texsrc[3]);
             texsrc[1]=float(texsrc[1])/float(texsrc[3]);
@@ -329,11 +235,10 @@ int main(int argc, char** argv )
             texsrc[3]=(float)(texsrc[3]>0.0 ? 255.0:0.0);
             texsum.at<Vec4f>(row,col)=texsrc;
         }
-    if(do_sum)
     imwrite("sum_TEX.png",texsum);
     
-    for(int row=0; row<600; row++)
-        for(int col=0; col<400; col++) {
+    for(int row=0; row<1200; row++)
+        for(int col=0; col<800; col++) {
             Vec4f texsrc=texmax.at<Vec4f>(row,col);
             texsrc[0]=float(texsrc[0])/float(texsrc[3]);
             texsrc[1]=float(texsrc[1])/float(texsrc[3]);
@@ -342,7 +247,6 @@ int main(int argc, char** argv )
             texsrc[3]=(float)(texsrc[3]>0.0 ? 255.0:0.0);
             texmax.at<Vec4f>(row,col)=texsrc;
         }
-    if(do_max)
     imwrite("max_TEX.png",texmax);
     
     return 0;

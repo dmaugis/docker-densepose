@@ -38,33 +38,20 @@ std::vector<unsigned char> unique(const cv::Mat& input, bool sort = false)
 static struct option long_options[] = {
     {"verbose",  		required_argument, 0, 'v'},
     {"help",     		no_argument,       0, 'h'},
-    {"pose",  	        required_argument, 0, 'p'},
-    {"green",  	        no_argument, 0, 'g'},
+    {"text-folder",  	required_argument, 0, 'i'},
     {0, 0, 0, 0}
 };
-
-void ReplaceStringInPlace(std::string& subject, const std::string& search,
-                          const std::string& replace) {
-    size_t pos = 0;
-    while((pos = subject.find(search, pos)) != std::string::npos) {
-         subject.replace(pos, search.length(), replace);
-         pos += replace.length();
-    }
-}
 
 int main(int argc, char** argv )
 {
     boost::filesystem::path iuvpath=boost::filesystem::path("default_IUV.png");
-    int green=0;
+
     int 	option_index = 0;
     while(1) {
-        int c = getopt_long (argc, argv, "hgv:p:",long_options, &option_index);
+        int c = getopt_long (argc, argv, "hv:i:",long_options, &option_index);
         if (c == -1)
             break;  // end of options
         switch (c) {
-        case 'g':
-            green=255;
-            break;
         case 'v':
             //verbose_level=atoi(optarg);
             break;
@@ -72,7 +59,7 @@ int main(int argc, char** argv )
             //usage(cerr,basename(argv[0]));
             //exit(1);
             break;		// never reached
-        case 'p':
+        case 'i':
             // path to _INDS.png and _IUV.png folder
             iuvpath=boost::filesystem::path(optarg);
             break;
@@ -114,33 +101,28 @@ int main(int argc, char** argv )
         vector<Mat>  tiles;
         for(int row=0; row<4; row++)
             for(int col=0; col<6; col++)
-                tiles.push_back(texture(Rect(100*row,100*col,100,100)));
+                tiles.push_back(texture(Rect(200*row,200*col,200,200)));
          
         // project original photo on tiles (i.e. texture image)
         // and keep count of pixel access on layer 3
-        Mat imgsrc(vuisrc.size(),CV_8UC4,Scalar(0,green,0,green));
+        Mat imgsrc(vuisrc.size(),CV_8UC4,Scalar(0,0,0,0));
         for(int row=0; row<iuvsize.height; row++)
             for(int col=0; col<iuvsize.width; col++) {
                 unsigned int ind=0;
                 Vec3b        vui=vuisrc.at<Vec3b>(row,col);
 
                 int i= (unsigned)0x1F & vui[0];
-                int u=(255.-float(vui[2]))*199./510.;
-                int v=float(vui[1])*199./510.;
+                int u=(255.-float(vui[2]))*199./255.;
+                int v=float(vui[1])*199./255.;
 
                 if((i>0)&&(i<25))
-                    if((u>=0)&&(u<100))
-                        if((v>=0)&&(v<100)) {
+                    if((u>=0)&&(u<200))
+                        if((v>=0)&&(v<200)) {
                             imgsrc.at<Vec4b>(row,col)=tiles[i-1].at<Vec4b>(u,v);
                         }
             }
-        //imshow("toto",imgsrc);
-        //waitKey(0);
-        std::string s=txtimbasename.string();
-        ReplaceStringInPlace(s,string("_TEX"),string(""));
-        s+=".png";
-        cerr<< s << endl;
-        imwrite(s.c_str(),imgsrc);
+        imshow("toto",imgsrc);
+        waitKey(0);
     }
     return 0;
 }
