@@ -18,18 +18,20 @@ static struct option long_options[] = {
     {"sum",     		no_argument,       0, 's'},
     {"max",     		no_argument,       0, 'm'},
     {"density",     	no_argument,       0, 'd'},
+    {"white",     	no_argument,       0, 'w'},
     {0, 0, 0, 0}
 };
 
 
-void shift(Mat textmp,Mat texture){
+void shift(Mat textmp,Mat texture,bool white){
 int row,col;
         
 for(int row=0; row<600-1; row++)
     for(int col=0; col<400; col++) {
-        Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-            if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
+        Vec4f   texsrc=texture.at<Vec4f>(row,col);
+        Vec4f   tmpsrc=texture.at<Vec4f>(row+1,col);
+        if(texsrc[3]&&!tmpsrc[3]){
+            if(white && (texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
                 continue;
             //texsrc[3]+=(float)1.0;    
             textmp.at<Vec4f>(row+1,col)+=texsrc;
@@ -38,8 +40,9 @@ for(int row=0; row<600-1; row++)
 for(int row=0; row<600; row++)
     for(int col=0; col<400-1; col++) {
         Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-            if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
+        Vec4f tmpsrc=texture.at<Vec4f>(row,col+1);
+        if(texsrc[3]&&!tmpsrc[3]){
+            if(white && (texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
                                 continue;
             //texsrc[3]+=(float)1.0;    
             textmp.at<Vec4f>(row,col+1)+=texsrc;
@@ -48,8 +51,9 @@ for(int row=0; row<600; row++)
 for(int row=0; row<600-1; row++)
     for(int col=0; col<400-1; col++) {
         Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
+        Vec4f tmpsrc=texture.at<Vec4f>(row+1,col+1);
+        if(texsrc[3]&&!tmpsrc[3]){
+            if(white && (texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
                                 continue;
             //texsrc[3]+=(float)1.0;    
             textmp.at<Vec4f>(row+1,col+1)+=texsrc;
@@ -59,8 +63,9 @@ for(int row=0; row<600-1; row++)
 for(int row=0+1; row<600; row++)
     for(int col=0; col<400; col++) {
         Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
+        Vec4f tmpsrc=texture.at<Vec4f>(row-1,col);
+        if(texsrc[3]&&!tmpsrc[3]){
+                        if(white && (texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
                                 continue;
             //texsrc[3]+=(float)1.0;    
             textmp.at<Vec4f>(row-1,col)+=texsrc;
@@ -69,8 +74,9 @@ for(int row=0+1; row<600; row++)
 for(int row=0; row<600; row++)
     for(int col=0+1; col<400; col++) {
         Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
+        Vec4f tmpsrc=texture.at<Vec4f>(row,col-1);
+        if(texsrc[3]&&!tmpsrc[3]){
+                        if(white && (texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
                                 continue;
             //texsrc[3]+=(float)1.0;    
             textmp.at<Vec4f>(row,col-1)+=texsrc;
@@ -79,8 +85,9 @@ for(int row=0; row<600; row++)
  for(int row=0+1; row<600; row++)
     for(int col=0+1; col<400; col++) {
         Vec4f texsrc=texture.at<Vec4f>(row,col);
-        if(texsrc[3]){
-                        if((texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
+        Vec4f tmpsrc=texture.at<Vec4f>(row-1,col-1);
+        if(texsrc[3]&&!tmpsrc[3]){
+                        if(white && (texsrc[0]>190)&&(texsrc[1]>190)&&(texsrc[2]>190)) // skip white
                                 continue;
             //texsrc[3]+=(float)1.0;    
             textmp.at<Vec4f>(row-1,col-1)+=texsrc;
@@ -95,10 +102,11 @@ int main(int argc, char** argv )
     bool    do_sum=false;
     bool    do_max=false;
     bool    do_density=false;
+    bool    white=false;
     
     int 	option_index = 0;
     while(1) {
-        int c = getopt_long (argc, argv, "hv:i:sm",long_options, &option_index);
+        int c = getopt_long (argc, argv, "hv:i:smw",long_options, &option_index);
         if (c == -1)
             break;  // end of options
         switch (c) {
@@ -106,6 +114,10 @@ int main(int argc, char** argv )
             //verbose_level=atoi(optarg);
             break;
         case 'h':
+            //usage(cerr,basename(argv[0]));
+            white=true; // white removal
+            break;		// never reached
+        case 'w':
             //usage(cerr,basename(argv[0]));
             //exit(1);
             break;		// never reached
@@ -224,7 +236,7 @@ int main(int argc, char** argv )
                     if((u>=0)&&(u<100))
                         if((v>=0)&&(v<100)) {
                             Vec3b pixsrc=imgsrc.at<Vec3b>(row,col); // original photo pixel
-                            if((pixsrc[0]>190)&&(pixsrc[1]>190)&&(pixsrc[2]>190)) // skip white
+                            if(white && (pixsrc[0]>190)&&(pixsrc[1]>190)&&(pixsrc[2]>190)) // skip white
                                 continue;
                                 
                             Vec4f texsrc=tiles[i-1].at<Vec4f>(u,v); // texture position
@@ -289,9 +301,9 @@ int main(int argc, char** argv )
         
         Mat   textmp(Size(400,600),CV_32FC4,Scalar(0,0,0,0));  
         
-        shift(textmp,texture);
-        shift(textmp,textmp.clone());
-        shift(textmp,textmp.clone());
+        shift(textmp,texture,white);
+        shift(textmp,textmp.clone(),white);
+        shift(textmp,textmp.clone(),white);
         textmp+=texture;
         textmp+=texture;
         textmp+=texture;

@@ -137,7 +137,7 @@ int main(int argc, char** argv )
         //imshow("toto",imgsrc);
         //waitKey(0);
         std::string s=txtimbasename.string();
-        ReplaceStringInPlace(s,string("_TEX"),string(""));
+        ReplaceStringInPlace(s,string("_TEX"),string("_POS"));
         s+=".png";
         cerr<< s << endl;
         imwrite(s.c_str(),imgsrc);
